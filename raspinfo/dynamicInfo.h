@@ -67,6 +67,8 @@ private:
     static std::string getMemorySplit();
     static std::string getTemperature();
     static std::string getTime(time_t now);
+    static std::string getCpuUsage();
+    static std::string getFileSystemUsage();
 };
 
 //-------------------------------------------------------------------------

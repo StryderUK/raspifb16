@@ -53,6 +53,8 @@ public:
     CpuStats();
 
     uint32_t total() const;
+    uint32_t active() const;
+    uint32_t idle() const;
     uint32_t user() const { return m_user; }
     uint32_t nice() const { return m_nice; }
     uint32_t system() const { return m_system; }

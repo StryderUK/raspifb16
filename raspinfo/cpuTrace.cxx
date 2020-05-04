@@ -88,6 +88,24 @@ total() const
            m_guest_nice;
 }
 
+uint32_t CpuStats::active() const
+{
+    return m_user +
+           m_nice +
+           m_system +
+           m_irq +
+           m_softirq +
+           m_steal +
+           m_guest +
+           m_guest_nice;
+}
+
+uint32_t CpuStats::idle() const
+{
+    return m_idle +
+           m_iowait;
+}
+
 //-------------------------------------------------------------------------
 
 CpuStats&

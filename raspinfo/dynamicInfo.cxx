@@ -39,6 +39,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
+#include <sys/statvfs.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -48,6 +49,8 @@
 #include "dynamicInfo.h"
 #include "image565Font.h"
 #include "system.h"
+
+#include "cpuTrace.h"
 
 //-------------------------------------------------------------------------
 
@@ -179,6 +182,50 @@ getTime(
     return buffer;
 }
 
+/*std::string DynamicInfo::getCpuUsage()
+{
+    char buffer[128];
+    double loads[3] = { 0.0, 0.0, 0.0 };
+
+    getloadavg(loads, 3);
+    sprintf(buffer, "%.02f %%", (double)(loads[0]));
+
+    return buffer;
+}*/
+
+std::string DynamicInfo::getCpuUsage()
+{
+    static CpuStats m_previousStats;
+    char buffer[128];
+    CpuStats currentStats;
+
+    CpuStats diff{currentStats - m_previousStats};
+
+    double percentage = 100.0f * diff.active() / diff.total();
+    sprintf(buffer, "%.02f%%", percentage);
+
+    m_previousStats = currentStats;
+    return buffer;
+}
+
+std::string DynamicInfo::getFileSystemUsage()
+{
+	char buffer[128];
+	const unsigned int GB = (1024 * 1024) * 1024;
+	struct statvfs fiData;
+
+	if(statvfs("/tmp", &fiData) < 0) {
+		sprintf(buffer, "N/A");
+	} else {
+		const double total = (double)(fiData.f_blocks * fiData.f_frsize) / GB;
+		const double available = (double)(fiData.f_bfree * fiData.f_frsize) / GB;
+		const double used = total - available;
+		const double usedPercentage = (double)(used / total) * (double)100;
+		sprintf(buffer, "%.02fGB / %.02fGB (%.02f%%)", available, total, usedPercentage);
+	}
+
+	return buffer;
+}
 //-------------------------------------------------------------------------
 
 DynamicInfo::
@@ -245,6 +292,18 @@ update(
                           m_foreground,
                           getImage());
 
+    position = drawString(position,
+                         " CPU ",
+                          m_heading,
+                          getImage());
+
+    std::string cpuUsageString = getCpuUsage();
+
+    position = drawString(position,
+                         cpuUsageString,
+                         m_foreground,
+                         getImage());
+
     //---------------------------------------------------------------------
 
     position.set(0, position.y() + raspifb16::sc_fontHeight + 4);
@@ -285,5 +344,16 @@ update(
                           "C",
                           m_foreground,
                           getImage());
+
+    position = drawString(position,
+                          " hdd ",
+                          m_heading,
+                          getImage());
+
+   std::string storageString = getFileSystemUsage();
+   position = drawString(position,
+                         storageString,
+                         m_foreground,
+                         getImage());
 }
 
